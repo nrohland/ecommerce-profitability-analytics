@@ -1,5 +1,7 @@
 # Ecommerce Profitability Analytics
 
+**[Open the live dashboard →](https://ecommerce-profitability-analytics.vercel.app)**
+
 A lightweight portfolio project that simulates the analytical model behind a US
 Amazon/DTC brand and presents it as a polished profitability command center. It is
 designed for realistic profitability, advertising, customer-cohort and Subscribe &
