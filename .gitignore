@@ -1,5 +1,6 @@
 .venv/
 .next/
+.vercel/
 node_modules/
 __pycache__/
 .pytest_cache/
