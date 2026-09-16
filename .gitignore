@@ -1,0 +1,10 @@
+.venv/
+.next/
+node_modules/
+__pycache__/
+.pytest_cache/
+*.pyc
+data/generated/*.parquet
+data/generated/*.duckdb
+data/*.duckdb
+!data/generated/.gitkeep

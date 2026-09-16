@@ -1,0 +1,28 @@
+{
+  "name": "ecommerce-profitability-analytics",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "data:generate": ".venv/bin/python scripts/generate_data.py && .venv/bin/python scripts/export_dashboard_data.py",
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "@types/node": "latest",
+    "@types/react": "latest",
+    "@types/react-dom": "latest",
+    "lucide-react": "latest",
+    "next": "latest",
+    "react": "latest",
+    "react-dom": "latest",
+    "recharts": "latest",
+    "typescript": "latest"
+  },
+  "devDependencies": {
+    "eslint": "latest",
+    "eslint-config-next": "latest"
+  }
+}
+
