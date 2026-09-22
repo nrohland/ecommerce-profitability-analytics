@@ -1,0 +1,128 @@
+{
+  "schema_version": 1,
+  "diagram_type": "dataflow",
+  "meta": {
+    "title": "Ecommerce Profitability Analytics · Data Flow",
+    "quality_profile": "showcase",
+    "viewBox": [
+      1080,
+      680
+    ]
+  },
+  "stages": [
+    {
+      "label": "Generate"
+    },
+    {
+      "label": "Store"
+    },
+    {
+      "label": "Model"
+    },
+    {
+      "label": "Export"
+    },
+    {
+      "label": "Explore"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "generator",
+      "type": "backend",
+      "label": "Synthetic data",
+      "sublabel": "Python generator",
+      "stage": 0,
+      "row": 1,
+      "width": 112
+    },
+    {
+      "id": "parquet",
+      "type": "database",
+      "label": "Parquet files",
+      "sublabel": "facts + dimensions",
+      "stage": 1,
+      "row": 1,
+      "width": 112
+    },
+    {
+      "id": "duckdb",
+      "type": "database",
+      "label": "DuckDB raw",
+      "sublabel": "Parquet views",
+      "stage": 2,
+      "row": 0,
+      "width": 112
+    },
+    {
+      "id": "metrics",
+      "type": "database",
+      "label": "Metric views",
+      "sublabel": "analytics schema",
+      "stage": 2,
+      "row": 2,
+      "width": 112
+    },
+    {
+      "id": "snapshot",
+      "type": "backend",
+      "label": "JSON snapshot",
+      "sublabel": "static export",
+      "stage": 3,
+      "row": 1,
+      "width": 112
+    },
+    {
+      "id": "dashboard",
+      "type": "frontend",
+      "label": "Dashboard",
+      "sublabel": "Next.js + Recharts",
+      "stage": 4,
+      "row": 0,
+      "width": 112
+    },
+    {
+      "id": "analyst",
+      "type": "frontend",
+      "label": "AI analyst",
+      "sublabel": "simulated answers",
+      "stage": 4,
+      "row": 2,
+      "width": 112
+    }
+  ],
+  "flows": [
+    {
+      "from": "generator",
+      "to": "parquet",
+      "label": "writes datasets",
+      "labelDy": 53
+    },
+    {
+      "from": "parquet",
+      "to": "duckdb",
+      "label": "raw Parquet views"
+    },
+    {
+      "from": "duckdb",
+      "to": "metrics",
+      "label": "models metrics",
+      "labelDy": 24
+    },
+    {
+      "from": "metrics",
+      "to": "snapshot",
+      "label": "exports query results"
+    },
+    {
+      "from": "snapshot",
+      "to": "dashboard",
+      "label": "powers charts"
+    },
+    {
+      "from": "snapshot",
+      "to": "analyst",
+      "label": "grounds demo answers"
+    }
+  ]
+}

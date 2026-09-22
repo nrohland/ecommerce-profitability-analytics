@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import {
+  ArrowLeft,
   ArrowRight,
   Bot,
   CheckCircle2,
@@ -212,6 +213,15 @@ export default function AiAnalyst({ data }: { data: AssistantData }) {
     ask(input);
   };
 
+  const chooseAnotherQuestion = () => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = null;
+    setLoading(false);
+    setAskedQuestion(null);
+    setAnswerId(null);
+    setInput("");
+  };
+
   return (
     <>
       <button
@@ -255,7 +265,14 @@ export default function AiAnalyst({ data }: { data: AssistantData }) {
             </div>
           )}
 
-          {askedQuestion && <div className="user-message">{askedQuestion}</div>}
+          {askedQuestion && (
+            <>
+              <button type="button" className="assistant-back-to-questions" onClick={chooseAnotherQuestion}>
+                <ArrowLeft size={15} strokeWidth={1.8} /> Choose another question
+              </button>
+              <div className="user-message">{askedQuestion}</div>
+            </>
+          )}
 
           {loading && (
             <div className="assistant-loading">
