@@ -21,8 +21,7 @@
     "typescript": "latest"
   },
   "devDependencies": {
-    "eslint": "latest",
+    "eslint": "^9.39.5",
     "eslint-config-next": "latest"
   }
 }
-
