@@ -15,6 +15,16 @@ import {
 } from "lucide-react";
 
 type AssistantData = {
+  snapshot: {
+    gross_revenue: number;
+    net_revenue: number;
+    contribution_profit: number;
+    contribution_margin: number;
+  };
+  monthly: Array<{
+    year: number;
+    contribution_profit: number;
+  }>;
   products: Array<{
     product_id: string;
     product_name: string;
@@ -46,7 +56,8 @@ type Answer = {
   body: string;
   metrics: Array<{ label: string; value: string; tone?: "positive" | "negative" }>;
   recommendations?: string[];
-  sql: string;
+  sql?: string;
+  statusLabel?: string;
 };
 
 const money = new Intl.NumberFormat("en-US", {
@@ -78,8 +89,25 @@ export default function AiAnalyst({ data }: { data: AssistantData }) {
     const oneTime = data.customerSegments.find((segment) => segment.customer_type === "one_time")!;
     const bestProfit = [...data.products].sort((a, b) => b.contribution_profit - a.contribution_profit)[0];
     const bestCampaign = [...data.campaigns].sort((a, b) => b.ltp_to_cac - a.ltp_to_cac)[0];
+    const priorProfit = data.monthly
+      .filter((month) => month.year === 2024)
+      .reduce((sum, month) => sum + month.contribution_profit, 0);
+    const profitChange = data.snapshot.contribution_profit - priorProfit;
 
     const items: Answer[] = [
+      {
+        id: "total_profit",
+        question: "What's the profit?",
+        eyebrow: "2025 profitability",
+        headline: `2025 contribution profit is ${compactMoney.format(data.snapshot.contribution_profit)}.`,
+        body: `The business is currently unprofitable at a ${pct(data.snapshot.contribution_margin)} contribution margin. Contribution profit is ${compactMoney.format(Math.abs(profitChange))} lower than in 2024.`,
+        metrics: [
+          { label: "Contribution profit", value: compactMoney.format(data.snapshot.contribution_profit), tone: "negative" },
+          { label: "Contribution margin", value: pct(data.snapshot.contribution_margin), tone: "negative" },
+          { label: "Net revenue", value: compactMoney.format(data.snapshot.net_revenue) },
+        ],
+        sql: `SELECT EXTRACT(year FROM date_day) AS year,\n       SUM(net_revenue) AS net_revenue,\n       SUM(contribution_profit) AS contribution_profit,\n       SUM(contribution_profit) / SUM(net_revenue) AS contribution_margin\nFROM analytics.product_daily_metrics\nGROUP BY 1\nORDER BY 1;`,
+      },
       {
         id: "next_steps",
         question: "What should we do next?",
@@ -163,6 +191,15 @@ export default function AiAnalyst({ data }: { data: AssistantData }) {
         ],
         sql: `WITH yearly AS (\n  SELECT product_id, EXTRACT(year FROM date_day) AS year,\n         SUM(gross_revenue) AS revenue,\n         SUM(contribution_profit) / SUM(net_revenue) AS margin\n  FROM analytics.product_daily_metrics\n  GROUP BY 1, 2\n)\nSELECT * FROM yearly\nORDER BY product_id, year;`,
       },
+      {
+        id: "unsupported",
+        question: "",
+        eyebrow: "Demo scope",
+        headline: "Sorry, I didn't understand that question.",
+        body: "I can continue the analysis with one of these validated questions:",
+        metrics: [],
+        statusLabel: "Question not mapped",
+      },
     ];
     return Object.fromEntries(items.map((item) => [item.id, item]));
   }, [data]);
@@ -191,8 +228,10 @@ export default function AiAnalyst({ data }: { data: AssistantData }) {
     if (/subscriber|subscribe|one.?time|retention/.test(normalized)) return "subscribers";
     if (/cac|spend|deterior|advertis/.test(normalized)) return "spend_curve";
     if (/grow|growth|losing margin/.test(normalized)) return "growth_risk";
-    if (/sku|product|contribution profit|most profit/.test(normalized)) return "best_product";
-    return "margin_decline";
+    if (/(why|declin|drop|margin).*(profit|margin)|(profit|margin).*(why|declin|drop)/.test(normalized)) return "margin_decline";
+    if (/sku|product|most profit|profit leader|best profit/.test(normalized)) return "best_product";
+    if (/profit|profitable|earnings/.test(normalized)) return "total_profit";
+    return "unsupported";
   };
 
   const ask = (question: string, id?: string) => {
@@ -283,25 +322,41 @@ export default function AiAnalyst({ data }: { data: AssistantData }) {
 
           {answer && !loading && (
             <article className="assistant-answer">
-              <div className="answer-status"><CheckCircle2 size={14} strokeWidth={2} /> Validated answer</div>
+              <div className="answer-status">
+                {answer.id === "unsupported" ? <Bot size={14} strokeWidth={2} /> : <CheckCircle2 size={14} strokeWidth={2} />}
+                {answer.statusLabel ?? "Validated answer"}
+              </div>
               <span className="answer-eyebrow">{answer.eyebrow}</span>
               <h3>{answer.headline}</h3>
               <p>{answer.body}</p>
-              <div className="answer-metrics">
-                {answer.metrics.map((metric) => (
-                  <div key={metric.label}><span>{metric.label}</span><strong className={metric.tone ?? ""}>{metric.value}</strong></div>
-                ))}
-              </div>
+              {answer.metrics.length > 0 && (
+                <div className="answer-metrics">
+                  {answer.metrics.map((metric) => (
+                    <div key={metric.label}><span>{metric.label}</span><strong className={metric.tone ?? ""}>{metric.value}</strong></div>
+                  ))}
+                </div>
+              )}
               {answer.recommendations && (
                 <div className="recommendation-list">
                   <div><Lightbulb size={15} strokeWidth={2} /> Prioritized next steps</div>
                   <ol>{answer.recommendations.map((item) => <li key={item}>{item}</li>)}</ol>
                 </div>
               )}
-              <details className="sql-disclosure">
-                <summary><span><Code2 size={15} strokeWidth={1.8} /> View generated SQL</span><ChevronDown size={15} strokeWidth={1.8} /></summary>
-                <pre><code>{answer.sql}</code></pre>
-              </details>
+              {answer.id === "unsupported" && (
+                <div className="suggestion-list assistant-follow-up-list">
+                  {["total_profit", "margin_decline", "next_steps"].map((id) => (
+                    <button type="button" key={id} onClick={() => ask(answers[id].question, id)} disabled={loading}>
+                      <span>{answers[id].question}</span><ArrowRight size={15} strokeWidth={1.8} />
+                    </button>
+                  ))}
+                </div>
+              )}
+              {answer.sql && (
+                <details className="sql-disclosure">
+                  <summary><span><Code2 size={15} strokeWidth={1.8} /> View generated SQL</span><ChevronDown size={15} strokeWidth={1.8} /></summary>
+                  <pre><code>{answer.sql}</code></pre>
+                </details>
+              )}
             </article>
           )}
         </div>

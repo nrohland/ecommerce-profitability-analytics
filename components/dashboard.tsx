@@ -40,6 +40,10 @@ type Numeric = number | null;
 
 type DashboardData = {
   meta: { brand: string; period: string; currency: string };
+  snapshot: {
+    gross_revenue: number; net_revenue: number; contribution_profit: number;
+    contribution_margin: number; orders: number; units: number; aov: number; tacos: number;
+  };
   monthly: Array<{
     month: string; year: number; gross_revenue: number; net_revenue: number;
     contribution_profit: number; contribution_margin: number; ad_spend: number;
