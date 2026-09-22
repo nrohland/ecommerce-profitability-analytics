@@ -25,26 +25,13 @@ answers are intentionally left for exploration.
 
 ## Architecture
 
-```text
-scripts/generate_data.py
-        │
-        ├── data/generated/*.parquet   (durable atomic datasets)
-        │
-        └── data/ecommerce.duckdb
-                ├── raw.*              (thin Parquet views)
-                └── analytics.*        (shared metric views)
-                         │
-                         ▼
-            public/data/dashboard.json
-                         │
-                         ▼
-               Next.js + Recharts
-```
+![Architecture data flow from synthetic ecommerce data through Parquet and DuckDB metrics to the dashboard and simulated analyst](docs/architecture.svg)
 
-The export script queries `analytics.*`, so the dashboard inherits definitions from
-`sql/metrics/semantic_views.sql` and `docs/metrics.md` instead of recreating business
-logic in React. The static JSON makes the portfolio easy to deploy without a
-server-side DuckDB runtime.
+Python generates Parquet facts and dimensions; DuckDB exposes raw and `analytics.*`
+views defined in `sql/metrics/semantic_views.sql`. The export script writes a static
+JSON snapshot consumed by both the Next.js dashboard and the deterministic analyst,
+so deployment does not require a server-side DuckDB runtime. Edit the
+[Archify source](docs/architecture.dataflow.json) to update the diagram.
 
 ## Generate and validate
 
