@@ -10,7 +10,7 @@ Dependabot opens PRs for known security vulnerabilities when a fix is available,
 
 ## Review and exceptions
 
-A temporary exception accepts only GHSA-vfj7-8cjw-p6xm in dev-only braces until 2026-11-22. Upstream latest braces 3.0.3 has no compatible patched release as of review. Inherited ESLint warnings remain visible; runtime dependency placement, other advisories or expiry block the check. This is an accepted temporary risk, not a clean npm audit.
+No vulnerability exceptions are configured. The Next.js ESLint plugin's fast-glob dependency is replaced by a narrow local adapter backed by tinyglobby 0.2.17, eliminating the vulnerable braces chain without disabling any lint rules. A compatibility test covers the plugin's actual globSync/onlyDirectories call. Reassess this override when updating the plugin.
 
 Run `python scripts/test_security_audit.py` and `python scripts/security_audit.py --directory .`. npm network errors, unknown inherited advisories, missing dev metadata and unreviewed prereleases fail closed. Current minimums are an additional guard, not a substitute for future vendor advisories. Never run npm audit fix --force blindly.
 
@@ -18,7 +18,7 @@ Once a month, a human should review official framework advisories, authenticatio
 
 ## Browser headers
 
-The frontend applies nosniff, anti-framing, referrer and browser-permission policies. CSP enforces base/object/frame/form restrictions; the full resource policy is Report-Only while resources and inline scripts are reviewed. It does not yet block every script source or provide a report collector. Verify the public deployment after each change; keep warnings distinct from enforced controls.
+The full resource CSP is enforced in Vercel headers. Every production build additionally places a strict script policy in each prerendered HTML head before scripts: only same-origin external scripts and hashes of that build's inline scripts are permitted. No unsafe-inline or unsafe-eval is allowed by this document policy; inline event handlers are denied. The HTTP policy retains the framework-compatible inline allowance, but the more restrictive document policy also applies and blocks arbitrary inline scripts. Inline styles remain allowed for React/chart rendering. Hashes are generated from exact emitted bytes, never copied between builds. CI verifies the policy and attempts a blocked inline-script injection. Dynamic pages fail the build until a per-request nonce design is reviewed. There is no CSP report collector or paid logging service.
 
 ## Validation and deployment
 
