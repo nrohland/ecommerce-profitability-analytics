@@ -48,6 +48,15 @@ try {
     await page.screenshot({path:path.join(output,'failure.png'),fullPage:false});
    }
    assert.deepEqual(errors,[],'Browser runtime errors');
+   const policy=await page.locator('meta[name=build-script-policy]').getAttribute('content');
+   assert.ok(policy.includes('sha256-'),'Missing build script hashes');
+   assert.ok(!policy.includes('unsafe-inline') && !policy.includes('unsafe-eval'));
+   const blocked=await page.evaluate(async()=>{
+    const probe=document.createElement('script');probe.textContent='window.__unexpectedInlineExecution=true';document.head.appendChild(probe);
+    await new Promise(resolve=>setTimeout(resolve,40));
+    return window.__unexpectedInlineExecution!==true;
+   });
+   assert.ok(blocked,'Arbitrary inline script executed');
    const name=(route==='/'?'home':route.replaceAll('/','-'))+'-'+viewport.width;
    await page.screenshot({path:path.join(output,name+'.png'),fullPage:true});
   }
