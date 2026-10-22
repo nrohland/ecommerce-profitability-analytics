@@ -20,3 +20,11 @@ test('changing inline content changes the policy',()=>{
  assert.notEqual(hardenHtml('<head><script>a()</script></head>'),hardenHtml('<head><script>b()</script></head>'));
  assert.throws(()=>hardenHtml('<body>No head</body>'),/no head/);
 });
+
+ test('HTML parser handles browser-valid closing tags and preserves charset',()=>{
+ const html='<head><meta charset="utf-8"><script>boot()</script data-x>'+'</head><body></body>';
+ const output=hardenHtml(html);
+ assert.ok(output.includes(createHash('sha256').update('boot()').digest('base64')));
+ assert.ok(output.indexOf('charset')<output.indexOf('build-script-policy'));
+ assert.equal(hardenHtml(output),output);
+ });

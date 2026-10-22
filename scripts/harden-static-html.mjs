@@ -3,19 +3,37 @@ import {createHash} from 'node:crypto';
 import {access,readdir,readFile,writeFile} from 'node:fs/promises';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
+import {parse} from 'parse5';
+
+function nodes(document) {
+ return [document,...(document.childNodes??[]).flatMap(nodes),...(document.content?nodes(document.content):[])];
+}
+const attribute=(node,name)=>node.attrs?.find(attr=>attr.name===name)?.value;
 
 export function hardenHtml(input) {
- const clean=input.replace(/<meta name="build-script-policy"[^>]*>/g,'');
- if(!/<head(?:\s[^>]*)?>/i.test(clean)) throw Error('HTML document has no head');
+ let clean=input;
+ const oldPolicies=nodes(parse(clean,{sourceCodeLocationInfo:true}))
+  .filter(node=>node.tagName==='meta' && attribute(node,'name')==='build-script-policy')
+  .map(node=>node.sourceCodeLocation).filter(Boolean).sort((a,b)=>b.startOffset-a.startOffset);
+ for(const loc of oldPolicies) clean=clean.slice(0,loc.startOffset)+clean.slice(loc.endOffset);
+ const documentNodes=nodes(parse(clean,{sourceCodeLocationInfo:true}));
+ const head=documentNodes.find(node=>node.tagName==='head');
+ if(!head?.sourceCodeLocation?.startTag) throw Error('HTML document has no head');
  const hashes=new Set();
- for(const match of clean.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script\s*>/gi)) {
-  if(!/\bsrc\s*=/i.test(match[1]) && match[2].trim()) {
-   hashes.add(`'sha256-${createHash('sha256').update(match[2],'utf8').digest('base64')}'`);
+ for(const node of documentNodes.filter(node=>node.tagName==='script')) {
+  if(attribute(node,'src')===undefined) {
+   const loc=node.sourceCodeLocation;
+   if(!loc?.startTag || !loc.endTag) throw Error('Unclosed build script');
+   const code=clean.slice(loc.startTag.endOffset,loc.endTag.startOffset);
+   if(code.trim()) hashes.add(`'sha256-${createHash('sha256').update(code,'utf8').digest('base64')}'`);
   }
  }
  const policy=`script-src 'self' ${[...hashes].sort().join(' ')}; script-src-attr 'none'`;
  const meta=`<meta name="build-script-policy" http-equiv="Content-Security-Policy" content="${policy}">`;
- return clean.replace(/<head(?:\s[^>]*)?>/i,match=>match+meta);
+ const charset=head.childNodes.find(node=>node.tagName==='meta' && attribute(node,'charset')!==undefined);
+ const offset=charset?.sourceCodeLocation?.endOffset??head.sourceCodeLocation.startTag.endOffset;
+ if(documentNodes.some(node=>node.tagName==='script' && node.sourceCodeLocation?.startOffset<offset)) throw Error('Script precedes the build policy');
+ return clean.slice(0,offset)+meta+clean.slice(offset);
 }
 
 async function walk(root) {

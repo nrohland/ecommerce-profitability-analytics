@@ -27,7 +27,8 @@
     "@playwright/test": "1.63.0",
     "eslint": "9.39.5",
     "eslint-config-next": "16.4.2",
-    "fast-glob": "file:vendor/next-eslint-glob"
+    "fast-glob": "file:vendor/next-eslint-glob",
+    "parse5": "8.0.1"
   },
   "overrides": {
     "source-map-js": "1.2.2",
