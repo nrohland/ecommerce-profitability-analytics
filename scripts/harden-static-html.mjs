@@ -51,21 +51,22 @@ export async function hardenBuild() {
  const manifest=JSON.parse(await readFile('.next/prerender-manifest.json','utf8'));
  if(Object.values(manifest.dynamicRoutes??{}).some(route=>route.fallback!==false)) throw Error('Dynamic fallback requires a reviewed nonce policy');
  const routes=JSON.parse(await readFile('.next/server/app-paths-manifest.json','utf8'));
+ const root=process.argv[2]??'out';
  for(const route of Object.keys(routes).filter(key=>key.endsWith('/page'))) {
   const source=route.slice(0,-5)||'/';
+  if(['/_global-error','/_not-found'].includes(source)) continue;
   const names=source.includes('[')
    ? Object.entries(manifest.routes).filter(([,info])=>info.srcRoute===source).map(([name])=>name)
    : [source];
   if(!names.length) throw Error(`Route ${route} has no prerendered documents`);
   for(const name of names) {
    if(manifest.routes[name]?.initialRevalidateSeconds!==false) throw Error(`Route ${name} is not immutable prerendered HTML`);
-   try {await access(path.join('.next/server/app',(name==='/'?'index':name.slice(1))+'.html'));}
-   catch {throw Error(`Route ${name} is not prerendered; a nonce policy is required`);}
+   const candidates=name==='/'?['index.html']:[name.slice(1)+'.html',path.join(name.slice(1),'index.html')];
+   const present=await Promise.all(candidates.map(async file=>{try {await access(path.join(root,file));return true;}catch{return false;}}));
+   if(!present.some(Boolean)) throw Error(`Route ${name} has no exported HTML; a nonce policy is required`);
   }
  }
- // Vercel's Next adapter consumes .next even when local delivery uses out.
- const roots=process.argv[2]?[process.argv[2]]:['out','.next/server/app'];
- const files=(await Promise.all(roots.map(walk))).flat();
+ const files=await walk(root);
  if(!files.length) throw Error('No prerendered HTML found');
  for(const file of files) {
   const content=await readFile(file,'utf8');
