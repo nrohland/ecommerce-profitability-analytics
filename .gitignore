@@ -18,3 +18,6 @@ data/generated/*.parquet
 data/generated/*.duckdb
 data/*.duckdb
 !data/generated/.gitkeep
+
+# Local TypeScript incremental cache
+*.tsbuildinfo
