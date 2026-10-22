@@ -6,7 +6,7 @@ Reviewed 2026-10-22. Next.js is pinned to 16.4.2 and React/React DOM stay aligne
 
 GitHub Actions runs Security checks every Monday at 10:20 Argentina time (UTC-3), as well as on main pushes, pull requests and manual dispatch. GitHub may delay scheduled runs; this is not an exact-time SLA. The jobs scan fetched Git history with checksum-verified Gitleaks and 100% redaction, audit the npm lockfile with fail-closed checks and reviewed framework minimums, audit Python requirements where present, and run CodeQL security-extended. They do not need a developer laptop, cloud warehouse credentials, paid runners or an AI model. Public repositories use standard GitHub-hosted runners. Potential-secret reports are not uploaded.
 
-Dependabot checks npm/Python weekly where applicable and GitHub Actions monthly. Updates become reviewable PRs, with no automatic merge. Failed security checks use normal GitHub Actions notifications; dependency/security alerts use GitHub and Dependabot. Notification delivery depends on the owner's GitHub preferences; the workflow does not send email itself. This does not enable data-extraction jobs.
+Dependabot opens PRs for known security vulnerabilities when a fix is available, with no automatic merge. General version-update PRs are disabled with open-pull-requests-limit: 0 for every ecosystem; this does not disable security updates. Review ordinary dependency versions and pinned GitHub Actions during monthly maintenance. Failed security checks use normal GitHub Actions notifications; dependency/security alerts use GitHub and Dependabot. Notification delivery depends on the owner's GitHub preferences; the workflow does not send email itself. This does not enable data-extraction jobs.
 
 ## Review and exceptions
 
