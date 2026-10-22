@@ -63,8 +63,9 @@ export async function hardenBuild() {
    catch {throw Error(`Route ${name} is not prerendered; a nonce policy is required`);}
   }
  }
- const root=process.argv[2]??'out';
- const files=await walk(root);
+ // Vercel's Next adapter consumes .next even when local delivery uses out.
+ const roots=process.argv[2]?[process.argv[2]]:['out','.next/server/app'];
+ const files=(await Promise.all(roots.map(walk))).flat();
  if(!files.length) throw Error('No prerendered HTML found');
  for(const file of files) {
   const content=await readFile(file,'utf8');

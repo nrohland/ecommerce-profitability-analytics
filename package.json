@@ -5,12 +5,11 @@
   "scripts": {
     "data:generate": ".venv/bin/python scripts/generate_data.py && .venv/bin/python scripts/export_dashboard_data.py",
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build && node scripts/harden-static-html.mjs",
     "start": "next start",
     "lint": "eslint .",
     "test:format": "node --experimental-strip-types --test scripts/currency.test.mjs",
-    "postbuild": "node scripts/harden-static-html.mjs",
-    "test:security-html": "node --test scripts/harden-static-html.test.mjs scripts/eslint-glob.test.mjs"
+    "test:security-html": "node --test scripts/harden-static-html.test.mjs scripts/eslint-glob.test.mjs scripts/delivery-policy.test.mjs"
   },
   "dependencies": {
     "@types/node": "22.20.3",
