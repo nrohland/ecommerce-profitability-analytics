@@ -96,6 +96,7 @@ jobs:
         working-directory: .
         run: |
           npm ci --ignore-scripts
+          npm run test:format
           npm run build
           google-chrome --version
       - name: Verify routes and hydration at desktop and mobile widths

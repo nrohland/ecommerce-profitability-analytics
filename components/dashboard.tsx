@@ -1,5 +1,7 @@
 "use client";
 
+import { compactMoney } from "@/components/format";
+
 import { useMemo, useState } from "react";
 import {
   Activity,
@@ -76,9 +78,6 @@ type SpendPoint = DashboardData["spendCurve"][number] & { isThreshold?: boolean 
 
 const money = new Intl.NumberFormat("en-US", {
   style: "currency", currency: "USD", maximumFractionDigits: 0,
-});
-const compactMoney = new Intl.NumberFormat("en-US", {
-  style: "currency", currency: "USD", notation: "compact", maximumFractionDigits: 1,
 });
 const integer = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
 const percent = (value: number) => `${(value * 100).toFixed(1)}%`;

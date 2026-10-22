@@ -1,5 +1,7 @@
 "use client";
 
+import { compactMoney } from "@/components/format";
+
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft,
@@ -53,12 +55,6 @@ const money = new Intl.NumberFormat("en-US", {
   style: "currency",
   currency: "USD",
   maximumFractionDigits: 0,
-});
-const compactMoney = new Intl.NumberFormat("en-US", {
-  style: "currency",
-  currency: "USD",
-  notation: "compact",
-  maximumFractionDigits: 1,
 });
 const pct = (value: number) => `${(value * 100).toFixed(1)}%`;
 
