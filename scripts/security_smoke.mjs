@@ -12,7 +12,9 @@ const {chromium}=require('@playwright/test');
 const port=4175,base=`http://127.0.0.1:${port}`;
 const output=path.resolve(process.env.EVIDENCE_DIR??'security-ui-evidence');
 await mkdir(output,{recursive:true});
-const server=config.static
+const server=process.env.SECURITY_SMOKE_DEV==='1'
+ ? spawn(process.execPath,['node_modules/next/dist/bin/next','dev','--port',String(port),'--hostname','127.0.0.1'],{cwd:directory,stdio:'ignore'})
+ : config.static
  ? spawn('python3',['-m','http.server',String(port),'--bind','127.0.0.1','--directory','out'],{cwd:directory,stdio:'ignore'})
  : spawn(process.execPath,['node_modules/next/dist/bin/next','start','--port',String(port),'--hostname','127.0.0.1'],{cwd:directory,stdio:'ignore'});
 let browser;
@@ -23,7 +25,7 @@ try {
   if(i===39)throw Error('Production server did not become ready');
   await new Promise(resolve=>setTimeout(resolve,250));
  }
- browser=await chromium.launch({headless:true});
+ browser=await chromium.launch({headless:true,...(process.env.SECURITY_BROWSER_CHANNEL?{channel:process.env.SECURITY_BROWSER_CHANNEL}:{})});
  for(const viewport of [{width:1440,height:900},{width:390,height:844}]){
   const page=await browser.newPage({viewport});
   const errors=[];page.on('pageerror',error=>errors.push(error.message));
@@ -40,6 +42,10 @@ try {
     await page.getByRole('button',{name:'Ask Northstar'}).click();
     assert.equal(await page.getByRole('complementary',{name:'Northstar AI analyst'}).getAttribute('aria-hidden'),'false');
     await page.getByRole('button',{name:'Close AI analyst',exact:true}).click();
+   }
+   if(errors.length){
+    await writeFile(path.join(output,'browser-errors.json'),JSON.stringify(errors,null,2));
+    await page.screenshot({path:path.join(output,'failure.png'),fullPage:false});
    }
    assert.deepEqual(errors,[],'Browser runtime errors');
    const name=(route==='/'?'home':route.replaceAll('/','-'))+'-'+viewport.width;
