@@ -107,3 +107,7 @@ integration. The project intentionally has no orchestration, dbt, container or
 cloud warehouse. Ad attribution is synthetic and last-touch-like; it is not an
 incrementality model. Customer identities, marketplace operations and daily
 reporting are simplified for interview-scale analysis.
+
+## Security maintenance
+
+Weekly GitHub-hosted dependency, secret and CodeQL checks; reviewed dependency updates without automatic merge. See [cadence, exceptions and monthly review](docs/security-maintenance.md).
